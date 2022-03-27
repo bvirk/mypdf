@@ -1,0 +1,6 @@
+#!/bin/bash
+if (( $# != 1 )); then
+exit 0
+fi
+mypdf $1
+xreader "${1%.*}.pdf" &
