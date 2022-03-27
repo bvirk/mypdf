@@ -3,7 +3,7 @@
 
 ### libraries installed as packages under mint 20.2
 
-libhpdf-2.3.0
+libhpdf-2.3.0  
 libhpdf-dev
 
 
@@ -14,7 +14,7 @@ mypdf -h
 ### charset
 The pdf is created by giving a .ptx file as argument. Its charset must be ISO8859-9
 
-didn't work for danish æøÆØ out of box therefore a 'decoding' using this workaround is done. åÅ didn't exists at all.
+didn't work for danish æøÆØ out of the box - therefore a 'decoding' using this workaround is done. åÅ didn't exists at all.
 
 ```
 const char tr[][2] = {
