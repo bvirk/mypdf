@@ -2,7 +2,8 @@
 #include <iterator>
 #include <utility>
 #include <list>
-#include <map> 
+#include <map>
+#include <algorithm>
 #include <sstream>
 #include <fstream>
 #include <string>
@@ -46,12 +47,15 @@ class PDF {
     
 	public:
     
-    string    stdFontName;
-    float     stdLineWidthFactor;
+    string  stdFontName;
+    float  stdLineWidthFactor;
+    float 	yreel;
+    float  savedYreel;
+    bool   yreelIsSaved;
     
     HPDF_Doc pdf;
 
-    PDF(const string& fontName, HPDF_REAL fontSize) {
+    PDF(const string& fontName, HPDF_REAL fontSize) : yreel(0),yreelIsSaved(false) {
     
         pdf = HPDF_New (error_handler, NULL);
         if (pdf) {
@@ -67,7 +71,7 @@ class PDF {
         
                 height = HPDF_Page_GetHeight (page);
                 width = HPDF_Page_GetWidth (page);
-                setFontAndSize(fontName,fontSize); //,"UTF-8");
+                setFontAndSize(fontName,fontSize);
                 stdLineWidthFactor=1.1;
             }
         }
@@ -84,11 +88,11 @@ class PDF {
     }
     
     void setFontAndSize(string fontName, HPDF_REAL fontSize,string encoding="") {
-        if (stdFontName.compare(fontName) != 0 ) {
+        if (stdFontName.compare(fontName) != 0) {
             stdFont = HPDF_GetFont(pdf, fontName.c_str(), encoding.size() ? encoding.c_str() : NULL );
             stdFontName = fontName;
-            stdFontSize=fontSize-1;
         }
+        stdFontSize=fontSize-1;
         if (fontSize != stdFontSize)
             HPDF_Page_SetFontAndSize (page, stdFont, fontSize);
     }
@@ -107,24 +111,40 @@ class PDF {
         return xEvaled;
     }
     
-    void plotLines(const string& text,const string& fontName, float fontSize, float  x,float  y, float  rectWidth,  alignType align) { 
-        setFontAndSize(fontName,fontSize);
-        plotLines(text,x,y,rectWidth,align);
+    void plotLines(const string& text,const string& fontName, float fontSize, float  x,float  y, float  rectWidth,  alignType align, bool isAbsY) { 
+    	setFontAndSize(fontName,fontSize);
+        plotLines(text,x,y,rectWidth,align,isAbsY);
     }
     
-    void plotLines(const string& text, float  x,float  y,  float  rectWidth,alignType align) { 
+    void plotLines(const string& text, float  x,float  y,  float  rectWidth,alignType align,bool isAbsY) { 
         HPDF_Page_BeginText (page);
-        
+        cout << "entering plotlines" << endl;
         istringstream stream(text);
         string line;
-        int lineNum=0;
-        while (getline(stream, line))
-           HPDF_Page_TextOut (page, alignedX(line,x,rectWidth,align), height-y-stdFontSize*stdLineWidthFactor*lineNum++, line.c_str());
+        if (isAbsY) {
+        	if (!yreelIsSaved) {
+        		yreelIsSaved=true;
+        		savedYreel=yreel;
+        	}
+        	yreel = stdLineWidthFactor*stdFontSize*y;
+        } else {
+        	if (yreelIsSaved) {
+        		yreelIsSaved=false;
+        		yreel=savedYreel;
+        	}
+        	yreel += stdLineWidthFactor*stdFontSize*y;
+        	
+        }	
+        while (getline(stream, line)) {
+        	yreel += stdLineWidthFactor*stdFontSize;
+        	cout << "now plotting" << endl;
+        	HPDF_Page_TextOut (page, alignedX(line,x,rectWidth,align), height-yreel, line.c_str());
+        }
        HPDF_Page_EndText (page);
     }
     
-    void plotLines(const string& text, float  x,float  y,alignType align) {
-        plotLines(text,x,y,0,align);
+    void plotLines(const string& text, float  x,float  y,alignType align,bool isAbsY) {
+        plotLines(text,x,y,0,align,isAbsY);
     }
 };
 
@@ -161,14 +181,39 @@ int listFontNames() {
 	return 0;
 }
 
-
+class Logger {
+	ofstream myfile;
+	bool isOpened;
+public:
+	Logger() : isOpened(false) {} 
+	~Logger() {  
+		if (isOpened) 
+			myfile.close(); 
+	}
+	string hhmmss() {
+		time_t now = time(0);
+		string date(ctime(& now));
+		return date.substr(11,8);
+	}
+	Logger& operator <<(string message) {
+		if (!isOpened) {
+			myfile.open ("/tmp/cdebug.log",ios::app);
+			isOpened=true;
+		}
+		myfile << hhmmss() << " " << message << endl;
+		return *this;
+	}
+	//ToLogC* operator <<(ToLogC* dummy) {
+	//	return this;
+	//}
+} toLog;
 
 string& trim(string& str) {
 	str.erase(0,str.find_first_not_of(" \n\r"));
 	str.erase(str.find_last_not_of(" \n\r")+1);
 	return str;
 }
-string& interpolated(string& c);
+string& interpolated(string& c); 
 
 const char tr[][2] = {
 	 {char(230),char(241)}
@@ -193,6 +238,7 @@ class PrintTask {
 	float fontSize;
 	float x;
 	float y;
+	bool hasAbsY;
 	float rectWidth;
 	alignType align;
 	bool hasLayout;
@@ -200,7 +246,7 @@ class PrintTask {
 public:
 	PDF pdf;
 	
-	PrintTask(string outFN) : hasLayout(false),pdf("Times-Roman",12),outFile(outFN) {}
+	PrintTask(string outFN) : hasLayout(false),pdf("Times-Roman",12),outFile(outFN),hasAbsY(false) {}
 	~PrintTask() { 
 		if (hasLayout)
 			pdf.save(outFile);
@@ -227,9 +273,11 @@ public:
 			case 2:
 				x = atof(word.c_str());
 				break;
-			case 3:
-				y = atof(word.c_str());
-				break;
+			case 3: {
+				const char* word_cstr = word.c_str();
+				y = atof(word_cstr);
+				hasAbsY=!isdigit(*(const_cast<char *>(word_cstr)+word.length()-1));
+				} break; 
 			case 4:
 				rectWidth = atof(word.c_str());
 				break;
@@ -251,7 +299,7 @@ public:
 	void flush(string& content) {
 		if (hasLayout) {
 			string text = decodeHack(interpolated(content));
-			pdf.plotLines(text,fontName, fontSize, x, y, rectWidth, align);
+			pdf.plotLines(text,fontName, fontSize, x, y, rectWidth, align,hasAbsY);
 		}
 	}
 };
@@ -370,11 +418,11 @@ int printChrTable(string font) {
 	return 0;
 }
 
+
 int test() {
-	cout << decodeHack("harder af forgiftede unge") << endl;
+	toLog << "compiled";
 	return 0;
 }
-
 			
 int main(int argc, char * argv[]) {
 	if (argc < 2 || argc > 3) 
@@ -395,7 +443,6 @@ int main(int argc, char * argv[]) {
 		case '?': 
 			cout << "unknown option: " << char(optopt) << endl;
 			return 0;
-		
 	}
     return procesInfile(string(argv[1]));
 }

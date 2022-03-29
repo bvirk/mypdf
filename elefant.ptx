@@ -4,16 +4,17 @@ pAdrL2=4300 Holbæk
 pPhone=12345678
 pEmail=a.mail.user@gmail.com
 
-[ Times-Bold,8,40,49,0,RIGHT ]
+[ Courier-Bold,14,0,1,400,Center ]
+Om elefanter
+[ Times-Bold,8,20,1a,0,RIGHT ]
 ${pName}
 ${pAdrL1}
 ${pAdrL2}
 
 mobil ${pPhone}
 ${pEmail}
-[ Courier-Bold,14,0,20,400,Center ]
-Om elefanter
-[ Times-Bold,10,10,40,0,LEFT ]
+
+[ Times-Bold,10,10,1,0,LEFT ]
 Det seneste aar har Namibias skov-myndigheder haft travlt med at jagte vilde elefanter fire forskellige
 steder i det store sydvestlige afrikanske land.
 
@@ -38,5 +39,5 @@ og sætte de vilde elefanter fri.
 Samtidig har organisationen, sammen med en lang række andre dyreorganisationer, sendt en skarp protest
 til de ansvarlige ministre i Namibia, hvor de stiller spørgsmaalstegn ved lovligheden i de
 kontroversielle elefanthandler.
-[ Times-Bold,8,10,490,0,LEFT ]
+[ Times-Bold,8,10,1,0,LEFT ]
 25. marts 2022 24NYT Internationalt, Tophistorie
