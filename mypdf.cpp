@@ -52,10 +52,11 @@ class PDF {
     float 	yreel;
     float  savedYreel;
     bool   yreelIsSaved;
+    string encoder;
     
     HPDF_Doc pdf;
 
-    PDF(const string& fontName, HPDF_REAL fontSize) : yreel(0),yreelIsSaved(false) {
+    PDF(const string& fontName, string encoder, HPDF_REAL fontSize) : yreel(0),yreelIsSaved(false),encoder(encoder) {
     
         pdf = HPDF_New (error_handler, NULL);
         if (pdf) {
@@ -67,7 +68,7 @@ class PDF {
                 //HPDF_EXPORT(HPDF_STATUS)
                 
                 //HPDF_UseUTFEncodings(pdf); 
-                HPDF_SetCurrentEncoder(pdf, "ISO8859-9");
+                HPDF_SetCurrentEncoder(pdf, encoder.c_str());
         
                 height = HPDF_Page_GetHeight (page);
                 width = HPDF_Page_GetWidth (page);
@@ -87,9 +88,9 @@ class PDF {
         HPDF_SaveToFile (pdf, fileName.c_str());
     }
     
-    void setFontAndSize(string fontName, HPDF_REAL fontSize,string encoding="") {
+    void setFontAndSize(string fontName, HPDF_REAL fontSize) { //,string encoding="ISO8859-9") {
         if (stdFontName.compare(fontName) != 0) {
-            stdFont = HPDF_GetFont(pdf, fontName.c_str(), encoding.size() ? encoding.c_str() : NULL );
+            stdFont = HPDF_GetFont(pdf, fontName.c_str(), encoder.c_str());// encoding.size() ? encoding.c_str() : NULL );
             stdFontName = fontName;
         }
         stdFontSize=fontSize-1;
@@ -111,14 +112,14 @@ class PDF {
         return xEvaled;
     }
     
-    void plotLines(const string& text,const string& fontName, float fontSize, float  x,float  y, float  rectWidth,  alignType align, bool isAbsY) { 
+    void plotLines(const string& text,const string& fontName, float fontSize, float  x,float  y, float  rectWidth,  alignType align, bool isAbsY) {
     	setFontAndSize(fontName,fontSize);
         plotLines(text,x,y,rectWidth,align,isAbsY);
     }
     
     void plotLines(const string& text, float  x,float  y,  float  rectWidth,alignType align,bool isAbsY) { 
         HPDF_Page_BeginText (page);
-        cout << "entering plotlines" << endl;
+        //cout << "entering plotlines" << endl;
         istringstream stream(text);
         string line;
         if (isAbsY) {
@@ -137,7 +138,7 @@ class PDF {
         }	
         while (getline(stream, line)) {
         	yreel += stdLineWidthFactor*stdFontSize;
-        	cout << "now plotting" << endl;
+        	//cout << "now plotting" << endl;
         	HPDF_Page_TextOut (page, alignedX(line,x,rectWidth,align), height-yreel, line.c_str());
         }
        HPDF_Page_EndText (page);
@@ -215,11 +216,16 @@ string& trim(string& str) {
 }
 string& interpolated(string& c); 
 
+/**
+ISO8859-1 to MacRoman encoding 
+**/
 const char tr[][2] = {
-	 {char(230),char(241)}
-	,{char(198),char(225)}
-	,{char(216),char(233)}
-	,{char(248),char(249)}
+	 {char(230),char(207)} //æ
+	,{char(198),char(174)} //Æ
+	,{char(248),char(191)} //ø
+	,{char(216),char(175)} //Ø
+	,{char(229),char(140)} //å
+	,{char(197),char(129)} //Å
 };
 
 string decodeHack(string s) {
@@ -246,7 +252,14 @@ class PrintTask {
 public:
 	PDF pdf;
 	
-	PrintTask(string outFN) : hasLayout(false),pdf("Times-Roman",12),outFile(outFN),hasAbsY(false) {}
+	PrintTask(string fontName, string encoding, HPDF_REAL fontSize, string outFN) : 	
+		 hasLayout(false)
+		,pdf(fontName
+			,encoding
+			,fontSize)
+		,outFile(outFN)
+		,hasAbsY(false) 
+		{}
 	~PrintTask() { 
 		if (hasLayout)
 			pdf.save(outFile);
@@ -333,7 +346,7 @@ int procesInfile(string fileName) {
 	string line;
     bool inArrayBlock=true;
    	string section;
-   	PrintTask pntTask(fileName.substr(0,fileName.find_last_of('.'))+".pdf");
+   	PrintTask pntTask("Times-Roman","MacRomanEncoding",12,fileName.substr(0,fileName.find_last_of('.'))+".pdf");
    	if (!pntTask.pdf.pdf) { 
         cout << "hpdf object creation failed\n";
     	return 1;
@@ -391,9 +404,10 @@ int printChrTable(string font) {
 	char buf[49];
 	buf[48]='\0';
 	memset(buf,32,48);
+	string encode = "MacRomanEncoding";
 	string numstr = "0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F  ";
-	string out = font+"\n\n   "+numstr+"\n";
-	for (int line=224; line <256; line+=16) {
+	string out = font+"-"+encode+"\n\n   "+numstr+"\n";
+	for (int line=64; line <256; line+=16) {
 		for (int offset=0; offset <16; offset++) {
 			*(buf+3*offset) = offset+line;
 			//*(buf+3*offset+1) = '.';
@@ -402,12 +416,12 @@ int printChrTable(string font) {
 		out += numstr.substr(3*line/16,3)+string(buf)+"\n";
 	}
 	//cout << out << endl;
-	PrintTask pntTask(font+".pdf");
+	PrintTask pntTask("Times-Roman",encode,20,font+".pdf");
    	if (!pntTask.pdf.pdf) { 
         cout << "hpdf object creation failed\n";
     	return 1;
     }
-    string layout = font+",10,10,10,0,LEFT";
+    string layout = font+",20,10,10,0,LEFT";
     //cout << layout << endl;
     //cout << out << endl;
     string empty;

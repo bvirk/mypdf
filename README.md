@@ -14,14 +14,19 @@ mypdf -h
 ### charset
 The pdf is created by giving a .ptx file as argument. Its charset must be ISO8859-9
 
-didn't work for danish æøÆØ out of the box - therefore a 'decoding' using this workaround is done. åÅ didn't exists at all.
+didn't work for danish æøåÆØÅ out of the box - therefore a 'decoding' using this workaround is done. all.
 
 ```
+/**
+ISO8859-1 to MacRomanEncoding encoding 
+**/
 const char tr[][2] = {
-	 {char(230),char(241)}
-	,{char(198),char(225)}
-	,{char(216),char(233)}
-	,{char(248),char(249)}
+	 {char(230),char(207)} //æ
+	,{char(198),char(174)} //Æ
+	,{char(248),char(191)} //ø
+	,{char(216),char(175)} //Ø
+	,{char(229),char(140)} //å
+	,{char(197),char(129)} //Å
 };
 
 string decodeHack(string s) {
