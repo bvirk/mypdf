@@ -1,8 +1,9 @@
 installdir = /home/bvirk/bin
-object = mypdf
-$(object) : $(object).o
-	g++  -o $(object) $(object).o -O2 -Wall -L/usr/local/lib -lhpdf -lm
-	cp $(object) $(installdir)
+object = mypdf.o logger.o pdf.o printtask.o globalFuncs.o
+out = mypdf
+$(out) : $(object)
+	g++  -o $(out) $(object) -O2 -Wall -L/usr/local/lib -lhpdf -lm
+	cp $(out) $(installdir)
 %.o : %.cpp
 	g++ -c $<
 

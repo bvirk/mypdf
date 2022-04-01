@@ -41,5 +41,42 @@ string decodeHack(string s) {
 
 ### compiling and viewing from editor
 
-Bash script 'compAndViewPdf',  compiles and opens a viewer - handsome invoked from a macro in text editor.  
+Bash script 'compAndViewPdf',  compiles and opens a viewer - handsome invoked from a macro in text editor. 
 
+### syntax of 'pdf script'
+The file consists of to section seperated by an empty line
+```
+pName=Benny Andersen
+pAdrL1=Kisserup Strand Vest 13
+pAdrL2=4300 Holbæk
+pPhone=12345678
+pEmail=a.mail.user@gmail.com
+
+```
+The first section is a variable block. It could be a presentaion of a record from a database query where the variable name is field names.
+
+The following sections follows the pattern
+
+[ fontname,fontsize,xpos,ypos,width,align] 
+```
+line 1
+...
+line n
+```
+
+#### fontname
+any of those listet by 'mypdf -s'. Any font name not spelt correct default to 'Times-Roman' - even the empty string. Convenient for not writting to much.
+
+#### fontsize,xpos,ypos and width
+are all real numbers. 
+
+The first drawed line of first section after the variable block is drawed y lines below the top - where lines is measured in the chosen font size.
+In any following sections y lines is the space to prior section, measured in the fontsize the line has to be drawed in.
+If ypos is followed by a letter - like in '1a' the ypos is absolute. In that way areas away from the  line below line progress can be drawed.
+A true number ypos again keeps up after the latest true number.
+
+#### align
+is one of LEFT, CENTER OR RIGHT. if align=center, width is the size line is centered in. If align is LEFT or RIGHT width has no effect and can be set til zero.
+
+#### lines
+is subject for enterpolation - the replacement mechanism known from php - but ${} surrounding is mandatory.
