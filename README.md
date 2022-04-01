@@ -72,6 +72,7 @@ are all real numbers.
 
 The first drawed line of first section after the variable block is drawed y lines below the top - where lines is measured in the chosen font size.
 In any following sections y lines is the space to prior section, measured in the fontsize the line has to be drawed in.
+
 If ypos is followed by a letter - like in '1a' the ypos is absolute. In that way areas away from the  line below line progress can be drawed.
 A true number ypos again keeps up after the latest true number.
 
