@@ -77,7 +77,7 @@ If ypos is followed by a letter - like in '1a' the ypos is absolute. In that way
 A true number ypos again keeps up after the latest true number.
 
 #### align
-is one of LEFT, CENTER OR RIGHT. if align=center, width is the size line is centered in. If align is LEFT or RIGHT width has no effect and can be set til zero.
+is one of LEFT, CENTER OR RIGHT. if align=center, width is the size line is centered in. If align is LEFT or RIGHT width has no effect and can be set til zero. x is from LEFT or RIGHT margin.
 
 #### lines
-is subject for enterpolation - the replacement mechanism known from php - but ${} surrounding is mandatory.
+is subject for interpolation - the replacement mechanism known from php - but ${} surrounding is mandatory.
