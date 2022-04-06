@@ -14,7 +14,7 @@ mypdf -h
 ### charset
 The pdf is created by giving a .ptx file as argument. Its charset must be ISO8859-9
 
-didn't work for danish æøåÆØÅ out of the box - therefore a 'decoding' using this workaround is done. all.
+didn't work for danish æøåÆØÅ out of the box - therefore a 'decoding' workaround is used.
 
 ```
 /**
